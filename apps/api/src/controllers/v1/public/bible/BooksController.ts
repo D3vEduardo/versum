@@ -1,18 +1,20 @@
 import { Controller, Get, Query, Res } from "azurajs/decorators";
 import { ResponseServer } from "azurajs/types";
-import { v } from "azurajs/validators";
-import { prisma } from "../../libs/prisma";
-import { Bible_bookWhereInput } from "../../generated/prisma/models";
-import { Testament } from "../../generated/prisma/enums";
+import { prisma } from "../../../../libs/prisma";
+import { Bible_bookWhereInput } from "../../../../generated/prisma/models";
+import { Testament } from "../../../../generated/prisma/enums";
+import { Swagger } from "azurajs/swagger";
+import { bibleBooksV1Swagger } from "../../../../swaggers";
 
-@Controller("/api/public/livros")
-export class BibleBooksController {
+@Controller("/api/v1/public/bible/books")
+export class BibleBooksV1Controller {
   @Get()
-  async getBook(
+  @Swagger(bibleBooksV1Swagger.getBooks)
+  async getBooks(
     @Query("page") page: string | undefined,
     @Query("limit") limit: string | undefined,
     @Query("testament") testament: string | undefined,
-    @Res() res: ResponseServer
+    @Res() res: ResponseServer,
   ) {
     // Parse e validação manual simples
     let parsedPage = 1;

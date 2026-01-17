@@ -1,4 +1,9 @@
-import { NextFunction, RequestServer, ResponseServer } from "azurajs/types";
+import {
+  NextFunction,
+  RequestHandler,
+  RequestServer,
+  ResponseServer,
+} from "azurajs/types";
 
 interface RateLimitRecord {
   count: number;
@@ -14,9 +19,23 @@ class PublicRoutesRateLimit {
   constructor(windowMs?: number, maxReqPerWindow?: number) {
     this.windowMs = windowMs || 60 * 1000;
     this.maxReqPerWindow = maxReqPerWindow || 60;
+    this.middleware = this.middleware.bind(this);
   }
 
-  middleware(req: RequestServer, res: ResponseServer, next: NextFunction) {
+  middleware: RequestHandler = (req, res, next) => {
+    if (!next || !req.url) {
+      throw new Error(
+        "Function 'next' is not mounted or url of req is undefined/null.",
+      );
+    }
+
+    const pathParts = req.url.split("/").filter((i) => i !== "");
+
+    const isPublicRoute =
+      pathParts[0] === "api" && pathParts.includes("public");
+
+    if (!isPublicRoute) return next();
+
     const key = req.ip;
     const now = Date.now();
 
@@ -47,7 +66,7 @@ class PublicRoutesRateLimit {
     }
 
     next();
-  }
+  };
 }
 
 export const publicRoutesRateLimit = new PublicRoutesRateLimit().middleware;
