@@ -1,5 +1,6 @@
 import { NextFunction, RequestServer, ResponseServer } from "azurajs/types";
 import { redis } from "@/libs/redis";
+import { logger } from "azurajs/logger";
 
 export async function cachePublicRoutes(
   req: RequestServer,
@@ -7,7 +8,9 @@ export async function cachePublicRoutes(
   next?: NextFunction,
 ) {
   if (!next || !req.url) return;
-  if (req.method !== "GET") {
+  const ignoreCache =
+    req.hostname == "localhost" && req.query["ignoreCache"] === "true";
+  if (req.method !== "GET" || ignoreCache) {
     return next();
   }
 

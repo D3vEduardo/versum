@@ -1,18 +1,18 @@
 import { SwaggerConfigType } from "@/swaggers/index";
-import { Testament } from "@/libs/prisma";
+
 class BibleBooksV1Swagger {
   constructor() {}
 
   getBooks: SwaggerConfigType = {
     description:
-      "Retorna todos os livros bíblicos disponíveis. Esta rota possui cache de 300 segundos e rate limit de 60 requisições por minuto.",
+      "Returns all available biblical books. This route has a cache of 300 seconds and rate limit of 60 requests per minute.",
     tags: ["Public", "Bible", "Books"],
-    summary: "Lista todos os livros bíblicos.",
+    summary: "Lists all biblical books.",
     parameters: [
       {
         in: "query",
         name: "page",
-        description: "Número da página para paginação (começa em 1)",
+        description: "Page number for pagination (starts at 1)",
         example: "1",
         schema: {
           type: "string",
@@ -21,7 +21,7 @@ class BibleBooksV1Swagger {
       {
         in: "query",
         name: "limit",
-        description: "Quantidade de livros por página",
+        description: "Number of books per page",
         example: "10",
         schema: {
           type: "string",
@@ -31,7 +31,7 @@ class BibleBooksV1Swagger {
         in: "query",
         name: "testament",
         description:
-          "Filtro por testamento (OLD para Antigo Testamento, NEW para Novo Testamento)",
+          "Filter by testament (OLD for Old Testament, NEW for New Testament)",
         example: "OLD",
         schema: {
           type: "string",
@@ -40,10 +40,10 @@ class BibleBooksV1Swagger {
     ],
     responses: {
       400: {
-        description: "Requisição inválida com parâmetros incorretos",
+        description: "Invalid request with incorrect parameters",
         example: {
           success: false,
-          error: "Página deve ser um número positivo",
+          error: "Page must be a positive number",
         },
         schema: {
           type: "object",
@@ -54,17 +54,17 @@ class BibleBooksV1Swagger {
             },
             error: {
               type: "string",
-              example: "Página deve ser um número positivo",
+              example: "Page must be a positive number",
             },
           },
         },
       },
       500: {
-        description: "Erro interno do servidor",
+        description: "Internal server error",
         example: {
           success: false,
-          message: "Erro ao buscar livros",
-          error: "Erro desconhecido",
+          message: "Error fetching books",
+          error: "Unknown error",
         },
         schema: {
           type: "object",
@@ -75,21 +75,21 @@ class BibleBooksV1Swagger {
             },
             message: {
               type: "string",
-              example: "Erro ao buscar livros",
+              example: "Error fetching books",
             },
             error: {
               type: "string",
-              example: "Erro desconhecido",
+              example: "Unknown error",
             },
           },
         },
       },
       200: {
-        description: "Lista de livros bíblicos buscada com sucesso",
+        description: "List of biblical books retrieved successfully",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
@@ -97,14 +97,14 @@ class BibleBooksV1Swagger {
           },
           "X-RateLimit-Remaining": {
             description:
-              "Número de requisições restantes antes de atingir o limite",
+              "Number of remaining requests before reaching the limit",
             schema: {
               type: "string",
               example: "59",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -118,14 +118,11 @@ class BibleBooksV1Swagger {
             {
               id: "0909fd62-060e-4960-a6f6-349ccd6420c1",
               name: "Gênesis",
-              testament: Testament.OLD,
-              order: 0,
-              _count: {
-                chapters: 50,
-              },
+              testament: "OLD",
+              order: 1,
+              totalChapters: 50,
             },
           ],
-          cache: false,
           pagination: {
             currentPage: 1,
             totalPages: 1,
@@ -163,16 +160,11 @@ class BibleBooksV1Swagger {
                   },
                   order: {
                     type: "integer",
-                    example: 0,
+                    example: 1,
                   },
-                  _count: {
-                    type: "object",
-                    properties: {
-                      chapters: {
-                        type: "integer",
-                        example: 50,
-                      },
-                    },
+                  totalChapters: {
+                    type: "integer",
+                    example: 50,
                   },
                 },
               },
@@ -208,39 +200,39 @@ class BibleBooksV1Swagger {
             },
             cache: {
               type: "boolean",
-              description: "Indica se a resposta foi retornada do cache",
+              description: "Indicates if the response was returned from cache",
               example: false,
             },
             cacheExpireAt: {
               type: "string",
               format: "date-time",
               description:
-                "Data e hora em que o cache expirará (apenas quando cache é true)",
+                "Date and time when the cache will expire (only when cache is true)",
               example: "2024-01-17T10:06:00.000Z",
             },
           },
         },
       },
       429: {
-        description: "Limite de requisições excedido para rotas públicas",
+        description: "Request limit exceeded for public routes",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
             },
           },
           "X-RateLimit-Remaining": {
-            description: "Número de requisições restantes (0 quando excedido)",
+            description: "Number of remaining requests (0 when exceeded)",
             schema: {
               type: "string",
               example: "0",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -249,7 +241,7 @@ class BibleBooksV1Swagger {
           },
         },
         example: {
-          error: "Você fez muitas requisições para uma rota pública!",
+          error: "You have made too many requests to a public route!",
           retryAfter: 45,
         },
         schema: {
@@ -257,12 +249,12 @@ class BibleBooksV1Swagger {
           properties: {
             error: {
               type: "string",
-              example: "Você fez muitas requisições para uma rota pública!",
+              example: "You have made too many requests to a public route!",
             },
             retryAfter: {
               type: "integer",
               description:
-                "Número de segundos a aguardar antes de fazer outra requisição",
+                "Number of seconds to wait before making another request",
               example: 45,
             },
           },
@@ -273,15 +265,15 @@ class BibleBooksV1Swagger {
 
   getBookByOrder: SwaggerConfigType = {
     description:
-      "Retorna um livro bíblico específico pelo seu número de ordem (order). Esta rota possui cache de 300 segundos e rate limit de 60 requisições por minuto.",
+      "Returns a specific biblical book by its order number (order). This route has a cache of 300 seconds and rate limit of 60 requests per minute.",
     tags: ["Public", "Bible", "Books"],
-    summary: "Obtém um livro bíblico pelo número de ordem.",
+    summary: "Gets a biblical book by order number.",
     parameters: [
       {
         in: "path",
         name: "bookOrder",
         required: true,
-        description: "Número de ordem do livro bíblico (1-73)",
+        description: "Order number of the biblical book (1-73)",
         example: "0",
         schema: {
           type: "string",
@@ -290,10 +282,10 @@ class BibleBooksV1Swagger {
     ],
     responses: {
       400: {
-        description: "Requisição inválida com parâmetros incorretos",
+        description: "Invalid request with incorrect parameters",
         example: {
           success: false,
-          error: "Informe o livro utilizando sua posição (1-73).",
+          error: "Provide the book using its position (1-73).",
         },
         schema: {
           type: "object",
@@ -304,16 +296,16 @@ class BibleBooksV1Swagger {
             },
             error: {
               type: "string",
-              example: "Informe o livro utilizando sua posição (1-73).",
+              example: "Provide the book using its position (1-73).",
             },
           },
         },
       },
       404: {
-        description: "Livro bíblico não encontrado",
+        description: "Biblical book not found",
         example: {
           success: false,
-          message: "Livro não encontrado",
+          message: "Book not found",
         },
         schema: {
           type: "object",
@@ -324,17 +316,17 @@ class BibleBooksV1Swagger {
             },
             message: {
               type: "string",
-              example: "Livro não encontrado",
+              example: "Book not found",
             },
           },
         },
       },
       500: {
-        description: "Erro interno do servidor",
+        description: "Internal server error",
         example: {
           success: false,
-          message: "Erro ao buscar livro",
-          error: "Erro desconhecido",
+          message: "Error fetching book",
+          error: "Unknown error",
         },
         schema: {
           type: "object",
@@ -345,21 +337,21 @@ class BibleBooksV1Swagger {
             },
             message: {
               type: "string",
-              example: "Erro ao buscar livro",
+              example: "Error fetching book",
             },
             error: {
               type: "string",
-              example: "Erro desconhecido",
+              example: "Unknown error",
             },
           },
         },
       },
       200: {
-        description: "Livro bíblico buscado com sucesso",
+        description: "Biblical book retrieved successfully",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
@@ -367,14 +359,14 @@ class BibleBooksV1Swagger {
           },
           "X-RateLimit-Remaining": {
             description:
-              "Número de requisições restantes antes de atingir o limite",
+              "Number of remaining requests before reaching the limit",
             schema: {
               type: "string",
               example: "59",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -387,10 +379,10 @@ class BibleBooksV1Swagger {
           data: {
             id: "0909fd62-060e-4960-a6f6-349ccd6420c1",
             name: "Gênesis",
-            testament: Testament.OLD,
-            order: 0,
+            testament: "OLD",
+            order: 1,
+            totalChapters: 50,
           },
-          cache: false,
         },
         schema: {
           type: "object",
@@ -418,38 +410,37 @@ class BibleBooksV1Swagger {
                 },
                 order: {
                   type: "integer",
-                  example: 0,
+                  example: 1,
+                },
+                totalChapters: {
+                  type: "integer",
+                  example: 50,
                 },
               },
-            },
-            cache: {
-              type: "boolean",
-              description: "Indica se a resposta foi retornada do cache",
-              example: false,
             },
           },
         },
       },
       429: {
-        description: "Limite de requisições excedido para rotas públicas",
+        description: "Request limit exceeded for public routes",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
             },
           },
           "X-RateLimit-Remaining": {
-            description: "Número de requisições restantes (0 quando excedido)",
+            description: "Number of remaining requests (0 when exceeded)",
             schema: {
               type: "string",
               example: "0",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -458,7 +449,7 @@ class BibleBooksV1Swagger {
           },
         },
         example: {
-          error: "Você fez muitas requisições para uma rota pública!",
+          error: "You have made too many requests to a public route!",
           retryAfter: 45,
         },
         schema: {
@@ -466,12 +457,12 @@ class BibleBooksV1Swagger {
           properties: {
             error: {
               type: "string",
-              example: "Você fez muitas requisições para uma rota pública!",
+              example: "You have made too many requests to a public route!",
             },
             retryAfter: {
               type: "integer",
               description:
-                "Número de segundos a aguardar antes de fazer outra requisição",
+                "Number of seconds to wait before making another request",
               example: 45,
             },
           },

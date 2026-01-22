@@ -5,15 +5,15 @@ class ChaptersV1Swagger {
 
   getChapters: SwaggerConfigType = {
     description:
-      "Retorna todos os capítulos de um livro bíblico específico. Esta rota possui cache de 300 segundos e rate limit de 60 requisições por minuto.",
+      "Returns all chapters of a specific biblical book. This route has a cache of 300 seconds and rate limit of 60 requests per minute.",
     tags: ["Public", "Bible", "Chapters"],
-    summary: "Lista todos os capítulos de um livro bíblico.",
+    summary: "Lists all chapters of a biblical book.",
     parameters: [
       {
         in: "path",
         name: "bookOrder",
         required: true,
-        description: "Número de ordem do livro bíblico (1-73)",
+        description: "Order number of the biblical book (1-73)",
         example: "1",
         schema: {
           type: "string",
@@ -22,7 +22,7 @@ class ChaptersV1Swagger {
       {
         in: "query",
         name: "page",
-        description: "Número da página para paginação (começa em 1)",
+        description: "Page number for pagination (starts at 1)",
         example: "1",
         schema: {
           type: "string",
@@ -31,7 +31,7 @@ class ChaptersV1Swagger {
       {
         in: "query",
         name: "limit",
-        description: "Quantidade de capítulos por página",
+        description: "Number of chapters per page",
         example: "10",
         schema: {
           type: "string",
@@ -40,10 +40,10 @@ class ChaptersV1Swagger {
     ],
     responses: {
       400: {
-        description: "Requisição inválida com parâmetros incorretos",
+        description: "Invalid request with incorrect parameters",
         example: {
           success: false,
-          error: "Informe o livro utilizando sua posição (1-73).",
+          error: "Provide the book using its position (1-73).",
         },
         schema: {
           type: "object",
@@ -54,16 +54,16 @@ class ChaptersV1Swagger {
             },
             error: {
               type: "string",
-              example: "Informe o livro utilizando sua posição (1-73).",
+              example: "Provide the book using its position (1-73).",
             },
           },
         },
       },
       404: {
-        description: "Livro bíblico não encontrado",
+        description: "Biblical book not found",
         example: {
           success: false,
-          message: "Livro não encontrado",
+          message: "Book not found",
         },
         schema: {
           type: "object",
@@ -74,17 +74,17 @@ class ChaptersV1Swagger {
             },
             message: {
               type: "string",
-              example: "Livro não encontrado",
+              example: "Book not found",
             },
           },
         },
       },
       500: {
-        description: "Erro interno do servidor",
+        description: "Internal server error",
         example: {
           success: false,
-          message: "Erro ao buscar capítulos",
-          error: "Erro desconhecido",
+          message: "Error fetching chapters",
+          error: "Unknown error",
         },
         schema: {
           type: "object",
@@ -95,21 +95,21 @@ class ChaptersV1Swagger {
             },
             message: {
               type: "string",
-              example: "Erro ao buscar capítulos",
+              example: "Error fetching chapters",
             },
             error: {
               type: "string",
-              example: "Erro desconhecido",
+              example: "Unknown error",
             },
           },
         },
       },
       200: {
-        description: "Lista de capítulos buscada com sucesso",
+        description: "List of chapters retrieved successfully",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
@@ -117,14 +117,14 @@ class ChaptersV1Swagger {
           },
           "X-RateLimit-Remaining": {
             description:
-              "Número de requisições restantes antes de atingir o limite",
+              "Number of remaining requests before reaching the limit",
             schema: {
               type: "string",
               example: "59",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -136,13 +136,12 @@ class ChaptersV1Swagger {
           success: true,
           data: [
             {
-              book_id: "0909fd62-060e-4960-a6f6-349ccd6420c1",
               id: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
+              bookId: "0909fd62-060e-4960-a6f6-349ccd6420c1",
               number: 1,
-              total_verses: 31,
+              totalVerses: 31,
             },
           ],
-          cache: false,
           pagination: {
             currentPage: 1,
             totalPages: 50,
@@ -164,21 +163,21 @@ class ChaptersV1Swagger {
               items: {
                 type: "object",
                 properties: {
-                  book_id: {
-                    type: "string",
-                    format: "uuid",
-                    example: "0909fd62-060e-4960-a6f6-349ccd6420c1",
-                  },
                   id: {
                     type: "string",
                     format: "uuid",
                     example: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
                   },
+                  bookId: {
+                    type: "string",
+                    format: "uuid",
+                    example: "0909fd62-060e-4960-a6f6-349ccd6420c1",
+                  },
                   number: {
                     type: "integer",
                     example: 1,
                   },
-                  total_verses: {
+                  totalVerses: {
                     type: "integer",
                     example: 31,
                   },
@@ -216,39 +215,39 @@ class ChaptersV1Swagger {
             },
             cache: {
               type: "boolean",
-              description: "Indica se a resposta foi retornada do cache",
+              description: "Indicates if the response was returned from cache",
               example: false,
             },
             cacheExpireAt: {
               type: "string",
               format: "date-time",
               description:
-                "Data e hora em que o cache expirará (apenas quando cache é true)",
+                "Date and time when the cache will expire (only when cache is true)",
               example: "2024-01-19T10:06:00.000Z",
             },
           },
         },
       },
       429: {
-        description: "Limite de requisições excedido para rotas públicas",
+        description: "Request limit exceeded for public routes",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
             },
           },
           "X-RateLimit-Remaining": {
-            description: "Número de requisições restantes (0 quando excedido)",
+            description: "Number of remaining requests (0 when exceeded)",
             schema: {
               type: "string",
               example: "0",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -257,7 +256,7 @@ class ChaptersV1Swagger {
           },
         },
         example: {
-          error: "Você fez muitas requisições para uma rota pública!",
+          error: "You have made too many requests to a public route!",
           retryAfter: 45,
         },
         schema: {
@@ -265,12 +264,12 @@ class ChaptersV1Swagger {
           properties: {
             error: {
               type: "string",
-              example: "Você fez muitas requisições para uma rota pública!",
+              example: "You have made too many requests to a public route!",
             },
             retryAfter: {
               type: "integer",
               description:
-                "Número de segundos a aguardar antes de fazer outra requisição",
+                "Number of seconds to wait before making another request",
               example: 45,
             },
           },
@@ -281,15 +280,15 @@ class ChaptersV1Swagger {
 
   getChapterByNumber: SwaggerConfigType = {
     description:
-      "Retorna um capítulo específico da Bíblia. Esta rota possui cache de 300 segundos e rate limit de 60 requisições por minuto.",
+      "Returns a specific Bible chapter. This route has a cache of 300 seconds and rate limit of 60 requests per minute.",
     tags: ["Public", "Bible", "Chapters"],
-    summary: "Obtém um capítulo bíblico pelo número.",
+    summary: "Gets a biblical chapter by number.",
     parameters: [
       {
         in: "path",
         name: "bookOrder",
         required: true,
-        description: "Número de ordem do livro bíblico (1-73)",
+        description: "Order number of the biblical book (1-73)",
         example: "1",
         schema: {
           type: "string",
@@ -299,7 +298,7 @@ class ChaptersV1Swagger {
         in: "path",
         name: "chapterNumber",
         required: true,
-        description: "Número do capítulo (mínimo 1)",
+        description: "Chapter number (minimum 1)",
         example: "1",
         schema: {
           type: "string",
@@ -308,11 +307,11 @@ class ChaptersV1Swagger {
     ],
     responses: {
       400: {
-        description: "Requisição inválida com parâmetros incorretos",
+        description: "Invalid request with incorrect parameters",
         example: {
           success: false,
           error:
-            "Informe o número do capítulo utilizando sua posição (Mínimo 1).",
+            "Provide the chapter number using its position (Minimum 1).",
         },
         schema: {
           type: "object",
@@ -324,16 +323,16 @@ class ChaptersV1Swagger {
             error: {
               type: "string",
               example:
-                "Informe o número do capítulo utilizando sua posição (Mínimo 1).",
+                "Provide the chapter number using its position (Minimum 1).",
             },
           },
         },
       },
       404: {
-        description: "Capítulo não encontrado",
+        description: "Chapter not found",
         example: {
           success: false,
-          message: "Capítulo não encontrado",
+          message: "Chapter not found",
         },
         schema: {
           type: "object",
@@ -344,17 +343,17 @@ class ChaptersV1Swagger {
             },
             message: {
               type: "string",
-              example: "Capítulo não encontrado",
+              example: "Chapter not found",
             },
           },
         },
       },
       500: {
-        description: "Erro interno do servidor",
+        description: "Internal server error",
         example: {
           success: false,
-          message: "Erro ao buscar capítulo",
-          error: "Erro desconhecido",
+          message: "Error fetching chapter",
+          error: "Unknown error",
         },
         schema: {
           type: "object",
@@ -365,21 +364,21 @@ class ChaptersV1Swagger {
             },
             message: {
               type: "string",
-              example: "Erro ao buscar capítulo",
+              example: "Error fetching chapter",
             },
             error: {
               type: "string",
-              example: "Erro desconhecido",
+              example: "Unknown error",
             },
           },
         },
       },
       200: {
-        description: "Capítulo bíblico buscado com sucesso",
+        description: "Biblical chapter retrieved successfully",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
@@ -387,14 +386,14 @@ class ChaptersV1Swagger {
           },
           "X-RateLimit-Remaining": {
             description:
-              "Número de requisições restantes antes de atingir o limite",
+              "Number of remaining requests before reaching the limit",
             schema: {
               type: "string",
               example: "59",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -406,11 +405,10 @@ class ChaptersV1Swagger {
           success: true,
           data: {
             id: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
-            book_id: "0909fd62-060e-4960-a6f6-349ccd6420c1",
+            bookId: "0909fd62-060e-4960-a6f6-349ccd6420c1",
             number: 1,
-            total_verses: 31,
+            totalVerses: 31,
           },
-          cache: false,
         },
         schema: {
           type: "object",
@@ -427,7 +425,7 @@ class ChaptersV1Swagger {
                   format: "uuid",
                   example: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
                 },
-                book_id: {
+                bookId: {
                   type: "string",
                   format: "uuid",
                   example: "0909fd62-060e-4960-a6f6-349ccd6420c1",
@@ -436,40 +434,35 @@ class ChaptersV1Swagger {
                   type: "integer",
                   example: 1,
                 },
-                total_verses: {
+                totalVerses: {
                   type: "integer",
                   example: 31,
                 },
               },
             },
-            cache: {
-              type: "boolean",
-              description: "Indica se a resposta foi retornada do cache",
-              example: false,
-            },
           },
         },
       },
       429: {
-        description: "Limite de requisições excedido para rotas públicas",
+        description: "Request limit exceeded for public routes",
         headers: {
           "X-RateLimit-Limit": {
             description:
-              "Número máximo de requisições permitidas por janela de tempo",
+              "Maximum number of requests allowed per time window",
             schema: {
               type: "string",
               example: "60",
             },
           },
           "X-RateLimit-Remaining": {
-            description: "Número de requisições restantes (0 quando excedido)",
+            description: "Number of remaining requests (0 when exceeded)",
             schema: {
               type: "string",
               example: "0",
             },
           },
           "X-RateLimit-Reset": {
-            description: "Data e hora em que o limite será resetado",
+            description: "Date and time when the limit will be reset",
             schema: {
               type: "string",
               format: "date-time",
@@ -478,7 +471,7 @@ class ChaptersV1Swagger {
           },
         },
         example: {
-          error: "Você fez muitas requisições para uma rota pública!",
+          error: "You have made too many requests to a public route!",
           retryAfter: 45,
         },
         schema: {
@@ -486,12 +479,12 @@ class ChaptersV1Swagger {
           properties: {
             error: {
               type: "string",
-              example: "Você fez muitas requisições para uma rota pública!",
+              example: "You have made too many requests to a public route!",
             },
             retryAfter: {
               type: "integer",
               description:
-                "Número de segundos a aguardar antes de fazer outra requisição",
+                "Number of seconds to wait before making another request",
               example: 45,
             },
           },

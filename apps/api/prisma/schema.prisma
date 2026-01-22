@@ -8,112 +8,124 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  username       String          @unique
-  name           String
-  email          String          @unique
-  bio            String?
-  picture_url    String?
-  created_at     DateTime        @default(now())
-  likes          Like[]
-  marks          Mark[]
-  readings       Reading[]
-  refresh_tokens Refresh_token[]
+  id            String         @id @default(uuid())
+  username      String         @unique
+  name          String
+  email         String         @unique
+  bio           String?
+  pictureUrl    String?        @map("picture_url")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  likes         Like[]
+  marks         Mark[]
+  readings      Reading[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
 }
 
-model Refresh_token {
-  id         String   @id @default(uuid())
-  user_id    String
-  token      String   @unique
-  expires_at DateTime
-  created_at DateTime @default(now())
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
 }
 
-model Magic_link {
-  id         String   @id @default(uuid())
-  email      String
-  token      String   @unique
-  expires_at DateTime
-  used       Boolean  @default(false)
-  created_at DateTime @default(now())
+model MagicLink {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("magic_links")
 }
 
-model Bible_book {
-  id             String          @id @default(uuid())
-  name           String          @unique
-  order          Int             @unique
-  testament      Testament
-  total_chapters Int
-  chapters       Bible_chapter[]
+model BibleBook {
+  id            String         @id @default(uuid())
+  name          String         @unique
+  order         Int            @unique
+  testament     Testament
+  totalChapters Int            @map("total_chapters")
+  chapters      BibleChapter[]
 
   @@index([order])
+  @@map("bible_books")
 }
 
-model Bible_chapter {
-  id           String        @id @default(uuid())
-  book_id      String
-  number       Int
-  total_verses Int
-  book         Bible_book    @relation(fields: [book_id], references: [id])
-  verses       Bible_verse[]
+model BibleChapter {
+  id          String       @id @default(uuid())
+  bookId      String       @map("book_id")
+  number      Int
+  totalVerses Int          @map("total_verses")
+  book        BibleBook    @relation(fields: [bookId], references: [id])
+  verses      BibleVerse[]
 
-  @@unique([book_id, number])
-  @@index([book_id, number])
+  @@unique([bookId, number])
+  @@index([bookId, number])
+  @@map("bible_chapters")
 }
 
-model Bible_verse {
-  id         String        @id @default(uuid())
-  chapter_id String
-  number     Int
-  text       String
-  chapter    Bible_chapter @relation(fields: [chapter_id], references: [id])
-  likes      Like[]
-  marks      Mark[]
-  readings   Reading[]
+model BibleVerse {
+  id        String       @id @default(uuid())
+  chapterId String       @map("chapter_id")
+  number    Int
+  text      String
+  chapter   BibleChapter @relation(fields: [chapterId], references: [id])
+  likes     Like[]
+  marks     Mark[]
+  readings  Reading[]
 
-  @@unique([chapter_id, number])
-  @@index([chapter_id, number])
+  @@unique([chapterId, number])
+  @@index([chapterId, number])
+  @@map("bible_verses")
 }
 
 model Reading {
-  id       String      @id @default(uuid())
-  user_id  String
-  verse_id String
-  mode     ReadingMode
-  read_at  DateTime    @default(now())
-  user     User        @relation(fields: [user_id], references: [id])
-  verse    Bible_verse @relation(fields: [verse_id], references: [id])
+  id      String      @id @default(uuid())
+  userId  String      @map("user_id")
+  verseId String      @map("verse_id")
+  mode    ReadingMode
+  readAt  DateTime    @default(now()) @map("read_at")
+  user    User        @relation(fields: [userId], references: [id])
+  verse   BibleVerse  @relation(fields: [verseId], references: [id])
 
-  @@index([user_id, read_at])
-  @@index([verse_id])
+  @@index([userId, readAt])
+  @@index([verseId])
+  @@map("readings")
 }
 
 model Like {
-  id         String      @id @default(uuid())
-  user_id    String
-  verse_id   String
-  created_at DateTime    @default(now())
-  user       User        @relation(fields: [user_id], references: [id])
-  verse      Bible_verse @relation(fields: [verse_id], references: [id])
+  id        String     @id @default(uuid())
+  userId    String     @map("user_id")
+  verseId   String     @map("verse_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  user      User       @relation(fields: [userId], references: [id])
+  verse     BibleVerse @relation(fields: [verseId], references: [id])
 
-  @@unique([user_id, verse_id])
-  @@index([user_id])
+  @@unique([userId, verseId])
+  @@index([userId])
+  @@map("likes")
 }
 
 model Mark {
-  id            String      @id @default(uuid())
-  user_id       String
-  verse_id      String
-  selected_text String
-  anotacao      String?
-  is_public     Boolean     @default(false)
-  created_at    DateTime    @default(now())
-  user          User        @relation(fields: [user_id], references: [id])
-  verse         Bible_verse @relation(fields: [verse_id], references: [id])
+  id           String     @id @default(uuid())
+  userId       String     @map("user_id")
+  verseId      String     @map("verse_id")
+  selectedText String     @map("selected_text")
+  annotation   String?    @map("anotacao")
+  isPublic     Boolean    @default(false) @map("is_public")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  user         User       @relation(fields: [userId], references: [id])
+  verse        BibleVerse @relation(fields: [verseId], references: [id])
 
-  @@index([user_id, is_public])
-  @@index([verse_id])
+  @@index([userId, isPublic])
+  @@index([verseId])
+  @@map("marks")
 }
 
 enum Testament {

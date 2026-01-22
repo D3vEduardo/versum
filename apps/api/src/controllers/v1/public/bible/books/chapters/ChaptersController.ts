@@ -2,11 +2,28 @@ import { Controller, Get, Param, Query, Res } from "azurajs/decorators";
 import { ResponseServer } from "azurajs/types";
 import { validateQueryPagination } from "@/utils";
 import { v } from "azurajs/validators";
-import { prisma } from "@/libs/prisma";
+import { BibleChaptersService, BibleBooksService } from "@/services";
+import {
+  BibleChapterViewModel,
+  PaginationViewModel,
+  ApiResponseViewModel,
+  ApiErrorViewModel,
+} from "@/viewmodels";
+import { Swagger } from "azurajs/swagger";
+import { chaptersV1Swagger } from "@/swaggers";
 
 @Controller("/api/v1/public/bible/books/:bookOrder/chapters")
 export class ChaptersController {
+  private chaptersService: BibleChaptersService;
+  private booksService: BibleBooksService;
+
+  constructor() {
+    this.chaptersService = new BibleChaptersService();
+    this.booksService = new BibleBooksService();
+  }
+
   @Get()
+  @Swagger(chaptersV1Swagger.getChapters)
   async getChapters(
     @Param("bookOrder") bookOrder: string,
     @Res() res: ResponseServer,
@@ -18,116 +35,104 @@ export class ChaptersController {
       .max(73)
       .min(1)
       .safeParse(Number(bookOrder));
+
     if (!parseBookOrder.success) {
-      return res.status(400).json({
-        success: false,
-        error: "Informe o livro utilizando sua posição (1-73).",
-      });
+      const errorResponse = new ApiErrorViewModel(
+        "Provide the book using its position (1-73).",
+        "INVALID_BOOK_ORDER",
+      );
+      return res.status(400).json(errorResponse.toJSON());
     }
+
     try {
       const { page: parsedPage, limit: parsedLimit } = validateQueryPagination({
         page,
         limit,
       });
 
-      const skip = (parsedPage - 1) * parsedLimit;
-
-      const bookWithChapters = await prisma.bible_book.findFirst({
-        where: {
-          order: parseBookOrder.data,
-        },
-        select: {
-          total_chapters: true,
-          chapters: {
-            skip,
-            take: parsedLimit,
-            select: {
-              book_id: true,
-              id: true,
-              number: true,
-              total_verses: true,
-            },
-            orderBy: {
-              number: "asc",
-            },
-          },
-        },
+      // Get book by order to find its ID
+      const book = await this.booksService.fetchBookByOrder({
+        bookOrder: parseBookOrder.data,
       });
-
-      if (!bookWithChapters) {
-        return res.status(404).json({
-          success: false,
-          message: "Livro não encontrado",
-        });
+      if (!book) {
+        const errorResponse = new ApiErrorViewModel(
+          "Book not found.",
+          "BOOK_NOT_FOUND",
+        );
+        return res.status(404).json(errorResponse.toJSON());
       }
 
-      const totalChapters = bookWithChapters.total_chapters;
-      const chapters = bookWithChapters.chapters;
-      const totalPages = Math.ceil(totalChapters / parsedLimit);
+      const result = await this.chaptersService.fetchChapters({
+        bookId: book.id,
+        page: parsedPage,
+        limit: parsedLimit,
+      });
 
-      return res.status(200).json({
-        success: true,
-        data: chapters,
-        pagination: {
-          currentPage: parsedPage,
-          totalPages: totalPages,
-          totalItems: totalChapters,
-          itemsPerPage: parsedLimit,
-          hasNextPage: parsedPage < totalPages,
-          hasPrevPage: parsedPage > 1,
-        },
-      });
+      const chapterViewModels = result.chapters.map((chapter) =>
+        new BibleChapterViewModel(chapter).toJSON(),
+      );
+      const paginationViewModel = new PaginationViewModel(result.pagination);
+      const response = new ApiResponseViewModel(
+        chapterViewModels,
+        paginationViewModel,
+      );
+
+      return res.status(200).json(response.toJSON());
     } catch (error) {
-      console.error("Erro ao listar capítulos:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Erro ao buscar capítulos",
-        error: error instanceof Error ? error.message : "Erro desconhecido",
-      });
+      console.error("Error listing chapters:", error);
+      const errorResponse = new ApiErrorViewModel(
+        "Error fetching chapters",
+        "INTERNAL_ERROR",
+      );
+      return res.status(500).json(errorResponse.toJSON());
     }
   }
 
   @Get("/:chapterNumber")
+  @Swagger(chaptersV1Swagger.getChapterByNumber)
   async getChapterByNumber(
     @Param("chapterNumber") chapterNumber: string,
+    @Param("bookOrder") bookOrder: string,
     @Res() res: ResponseServer,
   ) {
     const parseChapterNumber = v
       .number()
       .min(1)
       .safeParse(Number(chapterNumber));
-    if (!parseChapterNumber.success) {
-      return res.status(400).json({
-        success: false,
-        error:
-          "Informe o número do capítulo utilizando sua posição (Mínimo 1).",
-      });
+    const parseBookOrder = v.number().min(1).safeParse(Number(bookOrder));
+
+    if (!parseChapterNumber.success || !parseBookOrder.success) {
+      const errorResponse = new ApiErrorViewModel(
+        "Provide valid numbers for book and chapter.",
+        "INVALID_PARAMETERS",
+      );
+      return res.status(400).json(errorResponse.toJSON());
     }
 
     try {
-      const chapter = await prisma.bible_chapter.findFirst({
-        where: {
-          number: parseChapterNumber.data,
-        },
+      const chapter = await this.chaptersService.fetchChapterByBookAndNumber({
+        bookOrder: parseBookOrder.data,
+        chapterNumber: parseChapterNumber.data,
       });
 
       if (!chapter) {
-        return res.status(404).json({
-          success: false,
-          message: "Capítulo não encontrado",
-        });
+        const errorResponse = new ApiErrorViewModel(
+          "Chapter not found",
+          "NOT_FOUND",
+        );
+        return res.status(404).json(errorResponse.toJSON());
       }
 
-      return res.status(200).json({
-        success: true,
-        data: chapter,
-      });
-    } catch (e) {
-      return res.status(500).json({
-        success: false,
-        message: "Erro ao buscar capítulo",
-        error: e instanceof Error ? e.message : "Erro desconhecido",
-      });
+      const viewModel = new BibleChapterViewModel(chapter).toJSON();
+      const response = new ApiResponseViewModel(viewModel);
+      return res.status(200).json(response.toJSON());
+    } catch (error) {
+      console.error("Error fetching chapter:", error);
+      const errorResponse = new ApiErrorViewModel(
+        "Error fetching chapter",
+        "INTERNAL_ERROR",
+      );
+      return res.status(500).json(errorResponse.toJSON());
     }
   }
 }

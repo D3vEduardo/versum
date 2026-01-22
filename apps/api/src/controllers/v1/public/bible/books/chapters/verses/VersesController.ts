@@ -1,14 +1,37 @@
 import { Controller, Get, Param, Query, Res } from "azurajs/decorators";
 import { ResponseServer } from "azurajs/types";
 import { v } from "azurajs/validators";
-import { prisma } from "@/libs/prisma";
+import {
+  BibleVersesService,
+  BibleBooksService,
+  BibleChaptersService,
+} from "@/services";
 import { validateQueryPagination } from "@/utils";
+import {
+  BibleVerseViewModel,
+  PaginationViewModel,
+  ApiResponseViewModel,
+  ApiErrorViewModel,
+} from "@/viewmodels";
+import { Swagger } from "azurajs/swagger";
+import { versesV1Swagger } from "@/swaggers/v1/public/bible/books/chapters/verses/swagger";
 
 @Controller(
   "/api/v1/public/bible/books/:bookOrder/chapters/:chapterNumber/verses",
 )
 export class VersesController {
+  private versesService: BibleVersesService;
+  private booksService: BibleBooksService;
+  private chaptersService: BibleChaptersService;
+
+  constructor() {
+    this.versesService = new BibleVersesService();
+    this.booksService = new BibleBooksService();
+    this.chaptersService = new BibleChaptersService();
+  }
+
   @Get()
+  @Swagger(versesV1Swagger.getVerses)
   async getVerses(
     @Param("bookOrder") bookOrder: string,
     @Param("chapterNumber") chapterNumber: string,
@@ -20,16 +43,19 @@ export class VersesController {
     const parsedChapter = v.number().min(1).safeParse(Number(chapterNumber));
 
     if (!parsedBook.success) {
-      return res.status(400).json({
-        success: false,
-        error: "Informe o livro utilizando sua posição (1-73).",
-      });
+      const errorResponse = new ApiErrorViewModel(
+        "Provide the book using its position (1-73).",
+        "INVALID_BOOK_ORDER",
+      );
+      return res.status(400).json(errorResponse.toJSON());
     }
+
     if (!parsedChapter.success) {
-      return res.status(400).json({
-        success: false,
-        error: "Informe o capítulo utilizando um número válido (>=1).",
-      });
+      const errorResponse = new ApiErrorViewModel(
+        "Provide a valid chapter number (>=1).",
+        "INVALID_CHAPTER_NUMBER",
+      );
+      return res.status(400).json(errorResponse.toJSON());
     }
 
     try {
@@ -38,64 +64,46 @@ export class VersesController {
         limit,
       });
 
-      const skip = (parsedPage - 1) * parsedLimit;
-
-      const chapter = await prisma.bible_chapter.findFirst({
-        where: {
-          book: { order: parsedBook.data },
-          number: parsedChapter.data,
-        },
-        select: {
-          id: true,
-          total_verses: true,
-          verses: {
-            skip,
-            take: parsedLimit,
-            select: {
-              id: true,
-              number: true,
-              text: true,
-            },
-            orderBy: {
-              number: "asc",
-            },
-          },
-        },
+      const chapter = await this.chaptersService.fetchChapterByBookAndNumber({
+        bookOrder: parsedBook.data,
+        chapterNumber: parsedChapter.data,
       });
-
       if (!chapter) {
-        return res.status(404).json({
-          success: false,
-          error: "Capítulo não encontrado nesse livro.",
-        });
+        const errorResponse = new ApiErrorViewModel(
+          "Chapter not found.",
+          "CHAPTER_NOT_FOUND",
+        );
+        return res.status(404).json(errorResponse.toJSON());
       }
 
-      const totalVerses = chapter.total_verses;
-      const totalPages = Math.ceil(totalVerses / parsedLimit);
-
-      return res.status(200).json({
-        success: true,
-        data: chapter.verses,
-        pagination: {
-          currentPage: parsedPage,
-          totalPages,
-          totalItems: totalVerses,
-          itemsPerPage: parsedLimit,
-          hasNextPage: parsedPage < totalPages,
-          hasPrevPage: parsedPage > 1,
-        },
+      const result = await this.versesService.fetchVerses({
+        chapterId: chapter.id,
+        page: parsedPage,
+        limit: parsedLimit,
       });
-    } catch (err) {
-      console.error("Erro ao buscar versículos:", err);
 
-      return res.status(500).json({
-        success: false,
-        error: "Erro ao buscar versículos!",
-      });
+      const verseViewModels = result.verses.map((verse) =>
+        new BibleVerseViewModel(verse).toJSON(),
+      );
+      const paginationViewModel = new PaginationViewModel(result.pagination);
+      const response = new ApiResponseViewModel(
+        verseViewModels,
+        paginationViewModel,
+      );
+
+      return res.status(200).json(response.toJSON());
+    } catch (error) {
+      console.error("Error fetching verses:", error);
+      const errorResponse = new ApiErrorViewModel(
+        "Error fetching verses",
+        "INTERNAL_ERROR",
+      );
+      return res.status(500).json(errorResponse.toJSON());
     }
   }
 
   @Get("/:verseNumber")
+  @Swagger(versesV1Swagger.getVerseByNumber)
   async getVerseByNumber(
     @Param("bookOrder") bookOrder: string,
     @Param("chapterNumber") chapterNumber: string,
@@ -107,44 +115,50 @@ export class VersesController {
     const parsedVerse = v.number().min(1).safeParse(Number(verseNumber));
 
     if (!parsedBook.success || !parsedChapter.success || !parsedVerse.success) {
-      return res.status(400).json({
-        success: false,
-        error: "Informe números válidos para livro, capítulo e versículo.",
-      });
+      const errorResponse = new ApiErrorViewModel(
+        "Provide valid numbers for book, chapter, and verse.",
+        "INVALID_PARAMETERS",
+      );
+      return res.status(400).json(errorResponse.toJSON());
     }
 
     try {
-      const verse = await prisma.bible_verse.findFirst({
-        where: {
-          number: parsedVerse.data,
-          chapter: {
-            number: parsedChapter.data,
-            book: { order: parsedBook.data },
-          },
-        },
-        select: {
-          id: true,
-          number: true,
-          text: true,
-        },
+      const chapter = await this.chaptersService.fetchChapterByBookAndNumber({
+        bookOrder: parsedBook.data,
+        chapterNumber: parsedChapter.data,
+      });
+
+      if (!chapter) {
+        const errorResponse = new ApiErrorViewModel(
+          "Chapter not found.",
+          "NOT_FOUND",
+        );
+        return res.status(404).json(errorResponse.toJSON());
+      }
+
+      const verse = await this.versesService.fetchVerseByNumber({
+        chapterId: chapter?.id,
+        verseNumber: parsedVerse.data,
       });
 
       if (!verse) {
-        return res.status(404).json({
-          success: false,
-          error: "Versículo não encontrado.",
-        });
+        const errorResponse = new ApiErrorViewModel(
+          "Verse not found.",
+          "NOT_FOUND",
+        );
+        return res.status(404).json(errorResponse.toJSON());
       }
 
-      return res.status(200).json({
-        success: true,
-        data: verse,
-      });
-    } catch (err) {
-      return res.status(500).json({
-        success: false,
-        error: "Erro ao buscar o versículo!",
-      });
+      const viewModel = new BibleVerseViewModel(verse).toJSON();
+      const response = new ApiResponseViewModel(viewModel);
+      return res.status(200).json(response.toJSON());
+    } catch (error) {
+      console.error("Error fetching verse:", error);
+      const errorResponse = new ApiErrorViewModel(
+        "Error fetching verse",
+        "INTERNAL_ERROR",
+      );
+      return res.status(500).json(errorResponse.toJSON());
     }
   }
 }

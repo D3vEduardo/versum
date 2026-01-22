@@ -72,6 +72,46 @@ Retorna todos os livros bíblicos disponíveis na base de dados.
 
 ---
 
+##### `GET /v1/public/bible/books/{bookOrder}`
+
+Retorna um livro bíblico específico pelo seu número de ordem.
+
+**📋 Parâmetros:**
+
+| Parâmetro   | Localização | Tipo   | Obrigatório | Descrição                          | Exemplo |
+| ----------- | ----------- | ------ | ----------- | ---------------------------------- | ------- |
+| `bookOrder` | Path        | string | ✅ Sim      | Número de ordem do livro (1-73)    | `1`     |
+
+**✅ Respostas de Sucesso:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "order": 1,
+    "name": "Gênesis",
+    "abbreviation": "Gn",
+    "testament": "OLD"
+  }
+}
+```
+
+**❌ Respostas de Erro:**
+
+| Código | Descrição                | Exemplo                                                                           |
+| ------ | ------------------------ | --------------------------------------------------------------------------------- |
+| `400`  | Parâmetros inválidos     | `{ "success": false, "error": "Informe o livro utilizando sua posição (1-73)." }` |
+| `404`  | Livro não encontrado     | `{ "success": false, "message": "Livro não encontrado" }`                         |
+| `500`  | Erro interno do servidor | `{ "success": false, "message": "Erro ao buscar livro" }`                         |
+
+**⚡ Performance:**
+
+- 🔄 Cache: 300 segundos
+- 🚦 Rate Limit: 60 requisições/minuto
+
+---
+
 #### 📖 Capítulos Bíblicos
 
 ##### `GET /v1/public/bible/books/{bookOrder}/chapters`
@@ -114,6 +154,46 @@ Retorna todos os capítulos de um livro bíblico específico.
 | `400`  | Parâmetros inválidos     | `{ "success": false, "error": "Informe o livro utilizando sua posição (1-73)." }` |
 | `404`  | Livro não encontrado     | `{ "success": false, "message": "Livro não encontrado" }`                         |
 | `500`  | Erro interno do servidor | `{ "success": false, "message": "Erro ao buscar capítulos" }`                     |
+
+**⚡ Performance:**
+
+- 🔄 Cache: 300 segundos
+- 🚦 Rate Limit: 60 requisições/minuto
+
+---
+
+##### `GET /v1/public/bible/books/{bookOrder}/chapters/{chapterNumber}`
+
+Retorna um capítulo bíblico específico de um livro específico.
+
+**📋 Parâmetros:**
+
+| Parâmetro       | Localização | Tipo   | Obrigatório | Descrição                           | Exemplo |
+| --------------- | ----------- | ------ | ----------- | ----------------------------------- | ------- |
+| `bookOrder`     | Path        | string | ✅ Sim      | Número de ordem do livro (1-73)     | `1`     |
+| `chapterNumber` | Path        | string | ✅ Sim      | Número do capítulo (mínimo 1)       | `1`     |
+
+**✅ Respostas de Sucesso:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "number": 1,
+    "bookOrder": 1,
+    "versesCount": 31
+  }
+}
+```
+
+**❌ Respostas de Erro:**
+
+| Código | Descrição                | Exemplo                                                                                      |
+| ------ | ------------------------ | -------------------------------------------------------------------------------------------- |
+| `400`  | Parâmetros inválidos     | `{ "success": false, "error": "Informe números válidos para livro e capítulo." }`           |
+| `404`  | Capítulo não encontrado  | `{ "success": false, "error": "Capítulo não encontrado nesse livro." }`                      |
+| `500`  | Erro interno do servidor | `{ "success": false, "error": "Erro ao buscar capítulo!" }`                                  |
 
 **⚡ Performance:**
 
@@ -174,6 +254,48 @@ Retorna todos os versículos de um capítulo bíblico específico.
 
 ---
 
+##### `GET /v1/public/bible/books/{bookOrder}/chapters/{chapterNumber}/verses/{verseNumber}`
+
+Retorna um versículo bíblico específico de um capítulo e livro específicos.
+
+**📋 Parâmetros:**
+
+| Parâmetro       | Localização | Tipo   | Obrigatório | Descrição                           | Exemplo |
+| --------------- | ----------- | ------ | ----------- | ----------------------------------- | ------- |
+| `bookOrder`     | Path        | string | ✅ Sim      | Número de ordem do livro (1-73)     | `1`     |
+| `chapterNumber` | Path        | string | ✅ Sim      | Número do capítulo (mínimo 1)       | `1`     |
+| `verseNumber`   | Path        | string | ✅ Sim      | Número do versículo (mínimo 1)      | `1`     |
+
+**✅ Respostas de Sucesso:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "number": 1,
+    "text": "No princípio, criou Deus os céus e a terra.",
+    "bookOrder": 1,
+    "chapterNumber": 1
+  }
+}
+```
+
+**❌ Respostas de Erro:**
+
+| Código | Descrição                | Exemplo                                                                                      |
+| ------ | ------------------------ | -------------------------------------------------------------------------------------------- |
+| `400`  | Parâmetros inválidos     | `{ "success": false, "error": "Informe números válidos para livro, capítulo e versículo." }` |
+| `404`  | Versículo não encontrado | `{ "success": false, "error": "Versículo não encontrado." }`                                 |
+| `500`  | Erro interno do servidor | `{ "success": false, "error": "Erro ao buscar versículo!" }`                                 |
+
+**⚡ Performance:**
+
+- 🔄 Cache: 300 segundos
+- 🚦 Rate Limit: 60 requisições/minuto
+
+---
+
 ### 🔐 Rotas Autenticadas
 
 _Documentação de rotas autenticadas (autenticação, usuários, etc.) será adicionada em breve._
@@ -223,25 +345,9 @@ Todas as rotas seguem um padrão consistente de resposta:
 
 Todas as rotas com listagem suportam paginação através dos parâmetros `page` e `limit`.
 
----
-
-## 🛠️ Futuras Atualizações
-
-Esta documentação será expandida com:
-
-- [ ] Rotas de autenticação e autorização
-- [ ] Endpoints de usuários e perfis
-- [ ] Sistema de marcadores (bookmarks)
-- [ ] Histórico de leitura
-- [ ] Sincronização entre dispositivos
-- [ ] Busca avançada
-- [ ] Estatísticas e análises
-
----
-
 ## 📞 Suporte
 
-Para mais informações sobre a API, consulte a documentação Swagger em `/swagger` ou verifique os arquivos de configuração em `/src/swaggers/`.
+Para mais informações sobre a API, consulte a documentação Swagger em `/docs` ou verifique os arquivos de configuração em `/src/swaggers/`.
 
 ---
 

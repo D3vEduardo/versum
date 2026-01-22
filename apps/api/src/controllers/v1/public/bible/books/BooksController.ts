@@ -1,15 +1,26 @@
-import { Controller, Get, Param, Query, Req, Res } from "azurajs/decorators";
+import { Controller, Get, Param, Query, Res } from "azurajs/decorators";
 import { ResponseServer } from "azurajs/types";
-import { prisma } from "@/libs/prisma";
-import { Bible_bookWhereInput } from "../../../../../../generated/prisma/models";
-import { Testament } from "@/libs/prisma";
+import { BibleBooksService } from "@/services";
+import { validateQueryPagination } from "@/utils";
+import { v } from "azurajs/validators";
 import { Swagger } from "azurajs/swagger";
 import { bibleBooksV1Swagger } from "@/swaggers";
-import { v } from "azurajs/validators";
-import { validateQueryPagination } from "@/utils";
+import {
+  BibleBookViewModel,
+  PaginationViewModel,
+  ApiResponseViewModel,
+  ApiErrorViewModel,
+} from "@/viewmodels";
+import { Testament } from "@/libs/prisma/index";
 
 @Controller("/api/v1/public/bible/books")
 export class BibleBooksV1Controller {
+  private booksService: BibleBooksService;
+
+  constructor() {
+    this.booksService = new BibleBooksService();
+  }
+
   @Get()
   @Swagger(bibleBooksV1Swagger.getBooks)
   async getBooks(
@@ -24,57 +35,42 @@ export class BibleBooksV1Controller {
         limit,
       });
 
-      // Valida testamento se fornecido
-      if (
-        testament !== undefined &&
-        testament !== Testament.OLD &&
-        testament !== Testament.NEW
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: "Testamento deve ser 'OLD' ou 'NEW'",
-        });
+      // Validate testament if provided
+      let testamentValue: Testament | undefined;
+      if (testament) {
+        if (!Object.values(Testament).includes(testament as Testament)) {
+          const errorResponse = new ApiErrorViewModel(
+            "Testament must be 'OLD' or 'NEW'",
+            "INVALID_TESTAMENT",
+          );
+          return res.status(400).json(errorResponse.toJSON());
+        }
+        testamentValue = testament as Testament;
       }
 
-      const skip = (parsedPage - 1) * parsedLimit;
-
-      const where: Bible_bookWhereInput = {};
-
-      if (testament === Testament.OLD || testament === Testament.NEW) {
-        where.testament = testament;
-      }
-
-      const [books, totalBooks] = await Promise.all([
-        prisma.bible_book.findMany({
-          where,
-          skip,
-          take: parsedLimit,
-          orderBy: { order: "asc" },
-        }),
-        prisma.bible_book.count({ where }),
-      ]);
-
-      const totalPages = Math.ceil(totalBooks / parsedLimit);
-
-      return res.status(200).json({
-        success: true,
-        data: books,
-        pagination: {
-          currentPage: parsedPage,
-          totalPages: totalPages,
-          totalItems: totalBooks,
-          itemsPerPage: parsedLimit,
-          hasNextPage: parsedPage < totalPages,
-          hasPrevPage: parsedPage > 1,
-        },
+      const result = await this.booksService.fetchBooks({
+        page: parsedPage,
+        limit: parsedLimit,
+        testament: testamentValue,
       });
+
+      const bookViewModels = result.books.map((book) =>
+        new BibleBookViewModel(book).toJSON(),
+      );
+      const paginationViewModel = new PaginationViewModel(result.pagination);
+      const response = new ApiResponseViewModel(
+        bookViewModels,
+        paginationViewModel,
+      );
+
+      return res.status(200).json(response.toJSON());
     } catch (error) {
-      console.error("Erro ao listar livros:", error);
-      return res.status(500).json({
-        success: false,
-        message: "Erro ao buscar livros",
-        error: error instanceof Error ? error.message : "Erro desconhecido",
-      });
+      console.error("Error listing books:", error);
+      const errorResponse = new ApiErrorViewModel(
+        "Error fetching books",
+        "INTERNAL_ERROR",
+      );
+      return res.status(500).json(errorResponse.toJSON());
     }
   }
 
@@ -92,33 +88,31 @@ export class BibleBooksV1Controller {
     if (!parseBookOrder.success) {
       return res.status(400).json({
         success: false,
-        error: "Informe o livro utilizando sua posição (1-73).",
+        error: "Provide the book using its position (1-73).",
       });
     }
 
     try {
-      const book = await prisma.bible_book.findFirst({
-        where: {
-          order: parseBookOrder.data,
-        },
+      const book = await this.booksService.fetchBookByOrder({
+        bookOrder: parseBookOrder.data,
       });
 
       if (!book) {
         return res.status(404).json({
           success: false,
-          message: "Livro não encontrado",
+          message: "Book not found",
         });
       }
 
       return res.status(200).json({
         success: true,
-        data: book,
+        data: new BibleBookViewModel(book).toJSON(),
       });
     } catch (e) {
       return res.status(500).json({
         success: false,
-        message: "Erro ao buscar livro",
-        error: e instanceof Error ? e.message : "Erro desconhecido",
+        message: "Error fetching book",
+        error: e instanceof Error ? e.message : "Unknown error",
       });
     }
   }

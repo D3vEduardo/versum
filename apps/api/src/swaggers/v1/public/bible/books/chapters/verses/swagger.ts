@@ -142,11 +142,13 @@ class VersesV1Swagger {
           data: [
             {
               id: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
+              chapterId: "9876dcba-5432-10ef-ghij-klmnopqrstu9",
               number: 1,
               text: "No princípio, criou Deus os céus e a terra.",
             },
             {
               id: "2345bcde-6789-01fg-hijk-lmnopqrstuv2",
+              chapterId: "9876dcba-5432-10ef-ghij-klmnopqrstu9",
               number: 2,
               text: "A terra era sem forma e vazia; havia trevas sobre a face do abismo...",
             },
@@ -159,7 +161,6 @@ class VersesV1Swagger {
             hasNextPage: true,
             hasPrevPage: false,
           },
-          cache: false,
         },
         schema: {
           type: "object",
@@ -177,6 +178,11 @@ class VersesV1Swagger {
                     type: "string",
                     format: "uuid",
                     example: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
+                  },
+                  chapterId: {
+                    type: "string",
+                    format: "uuid",
+                    example: "9876dcba-5432-10ef-ghij-klmnopqrstu9",
                   },
                   number: {
                     type: "integer",
@@ -414,10 +420,10 @@ class VersesV1Swagger {
           success: true,
           data: {
             id: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
+            chapterId: "9876dcba-5432-10ef-ghij-klmnopqrstu9",
             number: 1,
             text: "No princípio, criou Deus os céus e a terra.",
           },
-          cache: false,
         },
         schema: {
           type: "object",
@@ -434,6 +440,11 @@ class VersesV1Swagger {
                   format: "uuid",
                   example: "1234abcd-5678-90ef-ghij-klmnopqrstu1",
                 },
+                chapterId: {
+                  type: "string",
+                  format: "uuid",
+                  example: "9876dcba-5432-10ef-ghij-klmnopqrstu9",
+                },
                 number: {
                   type: "integer",
                   example: 1,
@@ -443,11 +454,6 @@ class VersesV1Swagger {
                   example: "No princípio, criou Deus os céus e a terra.",
                 },
               },
-            },
-            cache: {
-              type: "boolean",
-              description: "Indica se a resposta foi retornada do cache",
-              example: false,
             },
           },
         },
