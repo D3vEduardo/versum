@@ -8,7 +8,7 @@ import type {
 } from "@/libs/prisma";
 
 export interface CreateBibleVerseInput {
-  chapter_id: string;
+  chapterId: string;
   number: number;
   text: string;
 }

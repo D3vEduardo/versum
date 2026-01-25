@@ -9,7 +9,6 @@ import { ApplicationStartup } from "@/startup";
 
 // Instancia o cliente Azura
 const app = new AzuraClient();
-
 // Configurar middlewares
 const middlewares = [debugRequests, publicRoutesRateLimit, cachePublicRoutes];
 

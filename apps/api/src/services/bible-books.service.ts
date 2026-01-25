@@ -1,10 +1,6 @@
 import { BibleBookRepository } from "@/repositories";
 import { prisma } from "@/libs/prisma";
-import {
-  Testament,
-  type BibleBookFindManyArgs,
-  type BibleBookCountArgs,
-} from "@/libs/prisma/index";
+import { Testament, type BibleBookFindManyArgs } from "@/libs/prisma/index";
 
 export interface FetchBooksParams {
   page: number;

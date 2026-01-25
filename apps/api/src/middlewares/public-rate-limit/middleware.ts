@@ -54,7 +54,7 @@ class PublicRoutesRateLimit {
     res.setHeader("X-RateLimit-Reset", new Date(record.resetAt).toISOString());
 
     if (record.count > this.maxReqPerWindow) {
-      return res.send(429).json({
+      return res.status(429).json({
         error: "Você fez muitas requisições para uma rota pública!",
         retryAfter: Math.ceil((record.resetAt - now) / 1000),
       });

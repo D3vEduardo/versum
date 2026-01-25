@@ -5,6 +5,9 @@ import { logger } from "azurajs/logger";
 import { env } from "@/env";
 import { redis } from "@/libs/redis";
 import { prisma } from "@/libs/prisma";
+import { Scalar } from "azurajs-scalar";
+import path from "path";
+import { fileURLToPath } from "url";
 
 /**
  * Classe responsável pelo startup e configuração inicial da aplicação
@@ -16,6 +19,19 @@ export class ApplicationStartup {
   constructor(app: AzuraClient, controllers: any[]) {
     this.app = app;
     this.controllers = controllers;
+
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    const baseUrl = env.APP_URL || "http://localhost:4002";
+    new Scalar({
+      apiSpecPath: "/api-spec.json",
+      proxyPath: "/scalar/proxy/",
+      docPath: "/docs/",
+      customHtmlPath: path.join(__dirname, "./public/html/api-docs.html"),
+      app,
+      baseUrl,
+    });
   }
 
   /**
@@ -42,6 +58,7 @@ export class ApplicationStartup {
             url: appUrl,
           },
         ],
+        uiEnabled: false,
       },
       Object.values(this.controllers),
     );

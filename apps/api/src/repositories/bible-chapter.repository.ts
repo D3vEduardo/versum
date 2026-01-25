@@ -15,7 +15,7 @@ export interface CreateBibleChapterInput {
 
 export interface UpdateBibleChapterInput {
   number?: number;
-  total_verses?: number;
+  totalVerses?: number;
 }
 
 export class BibleChapterRepository extends BaseRepository<
